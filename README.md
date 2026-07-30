@@ -6,7 +6,7 @@ Genera un resumen semanal en viñetas de la última nota de la sección [Entre t
 
 1. Creá un repositorio en GitHub y subí estos archivos.
 2. En **Settings → Secrets and variables → Actions**, agregá el secreto `GEMINI_API_KEY` con una clave creada en [Google AI Studio](https://aistudio.google.com/).
-3. Opcionalmente agregá la variable `GEMINI_MODEL` para cambiar el modelo; por defecto usa `gemini-3.5-flash`.
+3. Opcionalmente agregá la variable `GEMINI_MODEL` para cambiar el modelo; por defecto usa `gemini-3.1-flash-lite`.
 4. Agregá el secreto `NTFY_TOPIC` con el topic al que está suscripto tu Android. Puede ser solo el nombre del topic (por ejemplo, `mi-topic-secreto`) o una URL completa de un servidor ntfy propio.
 5. Si tu servidor ntfy requiere autenticación, agregá también el secreto opcional `NTFY_TOKEN`.
 

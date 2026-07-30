@@ -56,7 +56,7 @@ function articleTitle(articleHtml) {
 
 async function summarize(systemPrompt, articleUrl, title, body) {
   if (!process.env.GEMINI_API_KEY) throw new Error('Falta GEMINI_API_KEY. Configurala como secreto de GitHub Actions.');
-  const model = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+  const model = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
   const response = await fetch(`${GEMINI_API_URL}/${encodeURIComponent(model)}:generateContent`, {
     method: 'POST',
     headers: {
