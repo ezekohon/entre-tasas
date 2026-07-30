@@ -36,8 +36,7 @@ jobs:
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
-          REPOSITORY: ${{ github.repository }}
-          SHA: ${{ github.sha }}
+          BLOG_URL: https://entre-tasas-cafe-bahia.ezeka.chatgpt.site/
         run: |
           if [ -z "$NTFY_TOPIC" ]; then
             echo "NTFY_TOPIC no está configurado; se omite la notificación."
@@ -47,8 +46,6 @@ jobs:
             http://*|https://*) NTFY_URL="$NTFY_TOPIC" ;;
             *) NTFY_URL="https://ntfy.sh/$NTFY_TOPIC" ;;
           esac
-          OUTPUT_FILE="$(find output -type f -name '*.md' -print | sort | tail -n 1)"
-          OUTPUT_URL="https://github.com/$REPOSITORY/blob/main/$OUTPUT_FILE"
           AUTH_HEADER=()
           if [ -n "$NTFY_TOKEN" ]; then
             AUTH_HEADER=(-H "Authorization: Bearer $NTFY_TOKEN")
@@ -57,7 +54,7 @@ jobs:
             --header 'Title: Entre tasas y café' \
             --header 'Priority: default' \
             --header 'Tags: coffee,briefcase' \
-            --header "Click: $OUTPUT_URL" \
+            --header "Click: $BLOG_URL" \
             "${AUTH_HEADER[@]}" \
             --data "Nuevo resumen semanal disponible." \
             "$NTFY_URL"
