@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const SECTION_URL = 'https://www.lanueva.com/seccion/entre-tasas-y-cafe';
-const OPENAI_URL = 'https://api.openai.com/v1/responses';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const userAgent = 'entre-tasas-resumen/1.0 (+https://github.com/)';
 
 async function fetchText(url) {
@@ -55,29 +55,34 @@ function articleTitle(articleHtml) {
 }
 
 async function summarize(systemPrompt, articleUrl, title, body) {
-  if (!process.env.OPENAI_API_KEY) throw new Error('Falta OPENAI_API_KEY. Configurala como secreto de GitHub Actions.');
-  const response = await fetch(OPENAI_URL, {
+  if (!process.env.GEMINI_API_KEY) throw new Error('Falta GEMINI_API_KEY. Configurala como secreto de GitHub Actions.');
+  const model = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+  const response = await fetch(`${GEMINI_API_URL}/${encodeURIComponent(model)}:generateContent`, {
     method: 'POST',
     headers: {
-      authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      'x-goog-api-key': process.env.GEMINI_API_KEY,
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || 'gpt-5-mini',
-      input: [
-        { role: 'system', content: [{ type: 'input_text', text: systemPrompt }] },
-        { role: 'user', content: [{ type: 'input_text', text: `Fuente: ${articleUrl}\nTítulo: ${title}\n\nArtículo:\n${body}` }] },
+      systemInstruction: {
+        parts: [{ text: systemPrompt }],
+      },
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: `Fuente: ${articleUrl}\nTítulo: ${title}\n\nArtículo:\n${body}` }],
+        },
       ],
     }),
   });
-  if (!response.ok) throw new Error(`OpenAI devolvió HTTP ${response.status}: ${await response.text()}`);
+  if (!response.ok) throw new Error(`Gemini devolvió HTTP ${response.status}: ${await response.text()}`);
   const payload = await response.json();
-  const output = (payload.output_text ?? payload.output
-    ?.flatMap((item) => item.content ?? [])
-    .filter((part) => part.type === 'output_text')
-    .map((part) => part.text)
-    .join(''))?.trim();
-  if (!output) throw new Error('OpenAI no devolvió texto de salida.');
+  const output = payload.candidates
+    ?.flatMap((candidate) => candidate.content?.parts ?? [])
+    .map((part) => part.text ?? '')
+    .join('')
+    .trim();
+  if (!output) throw new Error(`Gemini no devolvió texto de salida: ${JSON.stringify(payload)}`);
   return output;
 }
 
