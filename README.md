@@ -7,8 +7,11 @@ Genera un resumen semanal en viñetas de la última nota de la sección [Entre t
 1. Creá un repositorio en GitHub y subí estos archivos.
 2. En **Settings → Secrets and variables → Actions**, agregá el secreto `OPENAI_API_KEY`.
 3. Opcionalmente agregá la variable `OPENAI_MODEL` para cambiar el modelo; por defecto usa `gpt-5-mini`.
+4. Agregá el secreto `NTFY_TOPIC` con el topic al que está suscripto tu Android. Puede ser solo el nombre del topic (por ejemplo, `mi-topic-secreto`) o una URL completa de un servidor ntfy propio.
+5. Si tu servidor ntfy requiere autenticación, agregá también el secreto opcional `NTFY_TOKEN`.
 
 El resultado se guarda y versiona en `output/AAAA-MM-DD.md`.
+Al completar el workflow, ntfy recibe una notificación con un enlace directo al resumen. Si el workflow falla, recibe una alerta de prioridad alta con enlace a los logs.
 
 ## Ejecución
 

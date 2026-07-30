@@ -31,3 +31,58 @@ jobs:
           git add output/
           git diff --cached --quiet || git commit -m "chore: resumen semanal"
           git push
+
+      - name: Avisar por ntfy
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          if [ -z "$NTFY_TOPIC" ]; then
+            echo "NTFY_TOPIC no está configurado; se omite la notificación."
+            exit 0
+          fi
+          case "$NTFY_TOPIC" in
+            http://*|https://*) NTFY_URL="$NTFY_TOPIC" ;;
+            *) NTFY_URL="https://ntfy.sh/$NTFY_TOPIC" ;;
+          esac
+          OUTPUT_FILE="$(find output -type f -name '*.md' -print | sort | tail -n 1)"
+          OUTPUT_URL="https://github.com/$REPOSITORY/blob/main/$OUTPUT_FILE"
+          AUTH_HEADER=()
+          if [ -n "$NTFY_TOKEN" ]; then
+            AUTH_HEADER=(-H "Authorization: Bearer $NTFY_TOKEN")
+          fi
+          curl --fail --silent --show-error --request POST \
+            --header 'Title: Entre tasas y café' \
+            --header 'Priority: default' \
+            --header 'Tags: coffee,briefcase' \
+            --header "Click: $OUTPUT_URL" \
+            "${AUTH_HEADER[@]}" \
+            --data "Nuevo resumen semanal disponible." \
+            "$NTFY_URL"
+
+      - name: Avisar por ntfy si falló
+        if: failure()
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$NTFY_TOPIC" ]; then exit 0; fi
+          case "$NTFY_TOPIC" in
+            http://*|https://*) NTFY_URL="$NTFY_TOPIC" ;;
+            *) NTFY_URL="https://ntfy.sh/$NTFY_TOPIC" ;;
+          esac
+          AUTH_HEADER=()
+          if [ -n "$NTFY_TOKEN" ]; then
+            AUTH_HEADER=(-H "Authorization: Bearer $NTFY_TOKEN")
+          fi
+          curl --fail --silent --show-error --request POST \
+            --header 'Title: Falló el resumen de Entre tasas y café' \
+            --header 'Priority: high' \
+            --header 'Tags: warning,coffee' \
+            --header "Click: $RUN_URL" \
+            "${AUTH_HEADER[@]}" \
+            --data 'El workflow no pudo generar el resumen. Tocá esta notificación para ver el error.' \
+            "$NTFY_URL"
