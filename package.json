@@ -1,0 +1,12 @@
+{
+  "name": "entre-tasas-resumen",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "run": "node src/run.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
