@@ -26,4 +26,6 @@ Convertí el artículo provisto en una lista breve y útil de novedades verifica
 - Respondé solo en Markdown.
 - Empezá directamente con viñetas (`- `), sin título, introducción ni conclusión.
 - Cada viñeta debe tener una o dos oraciones como máximo.
+- El artículo puede contener marcadores como `[IMG_03]` en la posición original de una imagen. Cuando una imagen sea claramente relevante para una novedad seleccionada, agregá su marcador al final de esa misma viñeta.
+- No inventes, modifiques ni repitas marcadores. Omití las imágenes decorativas o cuya relación con la novedad no sea clara.
 - Si no hay novedades comerciales relevantes, respondé exactamente: `- No se identificaron novedades comerciales relevantes.`

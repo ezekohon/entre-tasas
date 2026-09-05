@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { articleContentWithImages, attachImagesToSummary } from './article-images.js';
 
 const SECTION_URL = 'https://www.lanueva.com/seccion/entre-tasas-y-cafe';
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
@@ -37,15 +38,6 @@ function latestArticleUrl(sectionHtml) {
   const first = matches.at(0)?.[1];
   if (!first) throw new Error('No se encontró ninguna nota en la sección.');
   return new URL(decodeHtml(first), SECTION_URL).href;
-}
-
-function articleContent(articleHtml) {
-  const articleMatch = articleHtml.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i);
-  const mainMatch = articleHtml.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i);
-  const content = articleMatch?.[1] ?? mainMatch?.[1] ?? articleHtml;
-  const text = htmlToText(content);
-  if (text.length < 300) throw new Error('El contenido de la nota es demasiado corto; el sitio pudo haber cambiado.');
-  return text;
 }
 
 function articleTitle(articleHtml) {
@@ -93,10 +85,16 @@ async function main() {
   const articleUrl = latestArticleUrl(sectionHtml);
   const articleHtml = await fetchText(articleUrl);
   const title = articleTitle(articleHtml);
-  const summary = await summarize(systemPrompt, articleUrl, title, articleContent(articleHtml));
+  const article = articleContentWithImages(articleHtml);
+  if (article.text.length < 300) throw new Error('El contenido de la nota es demasiado corto; el sitio pudo haber cambiado.');
+  const rawSummary = await summarize(systemPrompt, articleUrl, title, article.text);
+  const summary = attachImagesToSummary(rawSummary, article.images);
   const destination = outputPath();
   await mkdir(path.dirname(destination), { recursive: true });
-  await writeFile(destination, `# ${title}\n\nFuente: ${articleUrl}\n\n${summary}\n`);
+  const imageCredit = summary.includes('![Imagen de la nota original]')
+    ? '\n\nImágenes: La Nueva / créditos indicados en la nota original.'
+    : '';
+  await writeFile(destination, `# ${title}\n\nFuente: ${articleUrl}\n\n${summary}${imageCredit}\n`);
   console.log(`Resumen creado: ${destination}`);
 }
 

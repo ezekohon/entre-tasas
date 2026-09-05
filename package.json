@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "run": "node src/run.js"
+    "run": "node src/run.js",
+    "test": "node --test src/*.test.js"
   },
   "engines": {
     "node": ">=20"
