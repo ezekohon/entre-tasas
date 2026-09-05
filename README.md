@@ -5,8 +5,8 @@ Genera un resumen semanal en viñetas de la última nota de la sección [Entre t
 ## Configuración
 
 1. Creá un repositorio en GitHub y subí estos archivos.
-2. En **Settings → Secrets and variables → Actions**, agregá el secreto `GEMINI_API_KEY` con una clave creada en [Google AI Studio](https://aistudio.google.com/).
-3. Opcionalmente agregá la variable `GEMINI_MODEL` para cambiar el modelo; por defecto usa `gemini-3.1-flash-lite`.
+2. En **Settings → Secrets and variables → Actions**, agregá el secreto `OPENAI_API_KEY` con tu [clave de la API de OpenAI](https://platform.openai.com/api-keys).
+3. Opcionalmente agregá la variable `OPENAI_MODEL` para cambiar el modelo; por defecto usa `gpt-5-nano`.
 4. Agregá el secreto `NTFY_TOPIC` con el topic al que está suscripto tu Android. Puede ser solo el nombre del topic (por ejemplo, `mi-topic-secreto`) o una URL completa de un servidor ntfy propio.
 5. Si tu servidor ntfy requiere autenticación, agregá también el secreto opcional `NTFY_TOKEN`.
 
@@ -34,8 +34,8 @@ El comportamiento del resumen está concentrado en [config/system-prompt.md](con
 
 ## Ejecución local
 
-Requiere Node.js 20 o superior y una clave de Gemini:
+Requiere Node.js 20 o superior y una clave de OpenAI:
 
 ```bash
-GEMINI_API_KEY=tu_clave npm run run
+OPENAI_API_KEY=tu_clave npm run run
 ```

@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const SECTION_URL = 'https://www.lanueva.com/seccion/entre-tasas-y-cafe';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 const userAgent = 'entre-tasas-resumen/1.0 (+https://github.com/)';
 
 async function fetchText(url) {
@@ -55,34 +55,30 @@ function articleTitle(articleHtml) {
 }
 
 async function summarize(systemPrompt, articleUrl, title, body) {
-  if (!process.env.GEMINI_API_KEY) throw new Error('Falta GEMINI_API_KEY. Configurala como secreto de GitHub Actions.');
-  const model = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
-  const response = await fetch(`${GEMINI_API_URL}/${encodeURIComponent(model)}:generateContent`, {
+  if (!process.env.OPENAI_API_KEY) throw new Error('Falta OPENAI_API_KEY. Configurala como secreto de GitHub Actions.');
+  const model = process.env.OPENAI_MODEL || 'gpt-5-nano';
+  const response = await fetch(OPENAI_RESPONSES_URL, {
     method: 'POST',
     headers: {
-      'x-goog-api-key': process.env.GEMINI_API_KEY,
+      authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      systemInstruction: {
-        parts: [{ text: systemPrompt }],
-      },
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: `Fuente: ${articleUrl}\nTítulo: ${title}\n\nArtículo:\n${body}` }],
-        },
-      ],
+      model,
+      instructions: systemPrompt,
+      input: `Fuente: ${articleUrl}\nTítulo: ${title}\n\nArtículo:\n${body}`,
+      store: false,
     }),
   });
-  if (!response.ok) throw new Error(`Gemini devolvió HTTP ${response.status}: ${await response.text()}`);
+  if (!response.ok) throw new Error(`OpenAI devolvió HTTP ${response.status}: ${await response.text()}`);
   const payload = await response.json();
-  const output = payload.candidates
-    ?.flatMap((candidate) => candidate.content?.parts ?? [])
-    .map((part) => part.text ?? '')
+  const output = payload.output
+    ?.flatMap((item) => item.type === 'message' ? item.content ?? [] : [])
+    .filter((part) => part.type === 'output_text')
+    .map((part) => part.text)
     .join('')
     .trim();
-  if (!output) throw new Error(`Gemini no devolvió texto de salida: ${JSON.stringify(payload)}`);
+  if (!output) throw new Error(`OpenAI no devolvió texto de salida: ${JSON.stringify(payload)}`);
   return output;
 }
 
